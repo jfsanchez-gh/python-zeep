@@ -1,10 +1,12 @@
 import copy
 import logging
+import warnings
 from contextlib import contextmanager
 
 from zeep.transports import Transport
 from zeep.wsdl import Document
 from zeep.xsd.const import NotSet
+from zeep import Transport, Client, utils
 
 logger = logging.getLogger(__name__)
 
@@ -322,3 +324,12 @@ class CachingClient(Client):
             kwargs.get('transport') or Transport(cache=SqliteCache()))
 
         super(CachingClient, self).__init__(*args, **kwargs)
+
+
+def get_client(wsdl, verify=True):
+    transport = Transport()
+    old_request = transport.session.request
+    if not verify:
+        warnings.filterwarnings('ignore', 'Unverified HTTPS request')
+    transport.session.request = utils.partialmethod(old_request, verify=verify)
+    return Client(wsdl, transport=transport)

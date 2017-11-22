@@ -1,6 +1,7 @@
 import cgi
 import inspect
 
+from functools import partial
 from lxml import etree
 
 from zeep.exceptions import XMLParseError
@@ -86,3 +87,11 @@ def get_media_type(value):
     """Parse a HTTP content-type header and return the media-type"""
     main_value, parameters = cgi.parse_header(value)
     return main_value
+
+
+class partialmethod(partial):
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+
+        return partial(self.func, instance, *(self.args or ()), **(self.keywords or {}))
